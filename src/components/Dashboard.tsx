@@ -29,7 +29,7 @@ console.log(session);
 
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-4">
-          <Link href="/dashboard" className="text-white hover:text-blue-400">
+          <Link href="/" className="text-white hover:text-blue-400">
             Dashboard
           </Link>
           <Link href="/task-list" className="text-white hover:text-blue-400">

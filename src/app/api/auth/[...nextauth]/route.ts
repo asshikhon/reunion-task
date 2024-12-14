@@ -10,7 +10,7 @@ type CustomUser = {
   id: string;
   name?: string;
   email?: string;
-  image?: string;
+  image?: string | null;
 };
 
 export const authOptions: NextAuthOptions = {
@@ -33,7 +33,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email and password are required.');
         }
 
-        const db: Db = (await connectDB())!;
+        const db: Db = (await connectDB())!; // Ensure the database connection is correct
         const user = await db.collection('users').findOne({ email });
 
         if (!user) {
@@ -46,6 +46,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials.');
         }
 
+        // Returning a user object that will be saved in the session
         return {
           id: user._id.toString(),
           name: user.name,
@@ -64,9 +65,11 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    // Called whenever a user signs in, this ensures that a user is created in the DB if it's their first time
     async signIn({ user, account }) {
       if (account?.provider === 'google' || account?.provider === 'github') {
         const db: Db = (await connectDB())!;
+
         const existingUser = await db.collection('users').findOne({ email: user.email });
 
         if (!existingUser) {
@@ -79,25 +82,32 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
+
+    // Called when the JWT is created or updated
     async jwt({ token, user }) {
       if (user) {
-        token.id = (user as CustomUser).id;
+        token.id = (user as CustomUser).id; // Add the custom id to the JWT token
       }
       return token;
     },
+
+    // Called when the session is created or updated
     async session({ session, token }) {
       if (token.id) {
         session.user = session.user || {};
-        (session.user as CustomUser).id = token.id as string;
+        (session.user as CustomUser).id = token.id as string; // Add the custom id to the session
       }
       return session;
     },
   },
   pages: {
-    signIn: '/login',
+    signIn: '/login', // Custom sign-in page
   },
-  debug: true,
+  debug: true, // Helpful for debugging in development
 };
 
+// Handler for NextAuth API route
 const handler = NextAuth(authOptions);
+
+// Explicitly define the methods to ensure proper typing
 export { handler as GET, handler as POST };
