@@ -1,40 +1,27 @@
 "use client";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import React, { FormEvent, useEffect, useState } from "react";
 
-// Define the type for the new user
+import React, { FormEvent, useState } from "react";
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
+import Link from "next/link";
+import { signIn } from "next-auth/react"; // Import the signIn function
+import { useRouter } from "next/navigation";
+
+// Define the type for the user object
 interface NewUser {
   name: string;
   email: string;
   password: string;
 }
 
-const Register: React.FC = () => {
+const SignUpPage: React.FC = () => {
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { data: session, status } = useSession(); // Get session status
-  const [loading, setLoading] = useState(true); // to handle loading state for session check
 
-console.log(session);
-console.log(status);
+  const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  // Redirect authenticated users to the home page
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/"); // Redirect if already logged in
-    } else {
-      setLoading(false); // Stop loading if session status is checked
-    }
-  }, [status, router]);
-
-  // Handle sign up form submission
-  const handleSignUp = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    // Assert that event.target is an HTMLFormElement
-    const form = event.target as HTMLFormElement;
-
-    // Extract values from the form
+    const form = e.target as HTMLFormElement;
     const newUser: NewUser = {
       name: (form.elements.namedItem("name") as HTMLInputElement).value,
       email: (form.elements.namedItem("email") as HTMLInputElement).value,
@@ -42,106 +29,105 @@ console.log(status);
     };
 
     try {
+      // Call your API route to create a new user
       const resp = await fetch("/signup/api", {
         method: "POST",
-        body: JSON.stringify(newUser),
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify(newUser),
       });
 
-      if (resp.status === 200) {
-        const loginResp = await signIn("credentials", {
+      if (resp.ok) {
+        // Automatically sign in the user after successful signup
+        const signInResponse = await signIn("credentials", {
+          redirect: false,
           email: newUser.email,
           password: newUser.password,
-          redirect: false,
         });
 
-        if (loginResp?.status === 200) {
-          router.push("/"); // Redirect to home on successful login
+        if (signInResponse?.ok) {
+          router.push("/"); // Redirect to the home page after successful signup
+        } else {
+          setError("Sign-in failed. Please try logging in manually.");
         }
+      } else {
+        const errorData = await resp.json();
+        setError(errorData.message || "Something went wrong, please try again.");
       }
     } catch (error) {
-      console.error("Error during sign-up:", error);
+      console.error("Error during signup:", error);
+      setError("Error occurred while creating the account.");
     }
   };
 
-  // If the page is still checking session, return a loading screen
-  if (loading) {
-    return <div>Loading...</div>; // Optionally show a loading spinner
-  }
-
   return (
-    <div
-      className="relative min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center"
-      style={{
-        backgroundImage: "url('https://i.ibb.co/c6KyHys/travel-concept-with-landmarks-1.jpg')",
-      }}
-    >
-      <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-      <div className="relative w-full max-w-sm bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-semibold text-center text-gray-700">Create an Account</h2>
-        <form onSubmit={handleSignUp} className="mt-4 space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-600">Full Name</label>
+    <div className="container mx-auto my-24">
+      <div className="flex justify-around flex-col md:flex-row gap-14">
+        <div></div>
+        <div className="border rounded-xl p-14 w-[610px]">
+          <h2 className="text-3xl font-bold text-center mb-16">SignUp</h2>
+          <form onSubmit={handleSignUp}>
+            {error && <p className="text-red-500 text-center">{error}</p>}
+            <label htmlFor="name" className="font-bold">
+              Name
+            </label>
+            <br />
             <input
               type="text"
-              id="name"
               name="name"
-              placeholder="John Doe"
-              required
-              className="w-full mt-1 px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              placeholder="Your Name"
+              className="input mt-3 mb-4 input-bordered w-full"
             />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-600">Email</label>
+            <br />
+            <label htmlFor="email" className="font-bold">
+              Email
+            </label>
+            <br />
             <input
               type="email"
-              id="email"
               name="email"
-              placeholder="you@example.com"
-              required
-              className="w-full mt-1 px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              placeholder="Your Email Address"
+              className="input mt-3 mb-4 input-bordered w-full"
             />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-600">Password</label>
+            <br />
+            <label htmlFor="password" className="font-bold">
+              Confirm Password
+            </label>
+            <br />
             <input
               type="password"
-              id="password"
               name="password"
-              placeholder="********"
-              required
-              className="w-full mt-1 px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              placeholder="Enter Your Password"
+              className="input mt-3 input-bordered w-full"
             />
+            <br />
+            <button type="submit" className="btn btn-primary w-full text-white mt-8">
+              Sign Up
+            </button>
+          </form>
+          <div className="text-center space-y-6 mt-8">
+            <h6>or sign in with</h6>
+            <div className="flex items-center gap-4 text-center justify-center">
+              <button className="btn bg-transparent btn-outline">
+                <FcGoogle className="text-3xl" />
+              </button>
+
+              <button className="btn bg-transparent btn-outline">
+                <FaGithub className="text-3xl" />
+              </button>
+            </div>
+            <h6>
+              Already have an account?{" "}
+              <Link href={`/login`} className="underline text-blue-700">
+                Login
+              </Link>
+            </h6>
           </div>
-          <div>
-            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-600">Confirm Password</label>
-            <input
-              type="password"
-              id="confirm-password"
-              name="confirm-password"
-              placeholder="********"
-              required
-              className="w-full mt-1 px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Register
-          </button>
-        </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <a href="/login" className="text-blue-600 hover:underline">
-            Login
-          </a>
-        </p>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default SignUpPage;

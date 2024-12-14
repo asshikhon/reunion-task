@@ -10,6 +10,9 @@ const Dashboard: React.FC = () => {
   const { data: session } = useSession(); // Get the user session
   const router = useRouter();
 
+console.log(session);
+
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -79,7 +82,7 @@ const Dashboard: React.FC = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden flex flex-col items-center space-y-4 mt-4">
           <Link
-            href="/dashboard"
+            href="/"
             className="text-white hover:text-blue-400"
             onClick={() => setIsMobileMenuOpen(false)}
           >
