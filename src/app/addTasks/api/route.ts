@@ -19,8 +19,8 @@ export const POST = async (req: Request) => {
     const body = await req.json();
 
     // Validation
-    const { title, startTime, endTime, priority, status } = body;
-    if (!title || !startTime || !endTime || !priority || !status) {
+    const { title, startTime, endTime, priority, status, email } = body;
+    if (!title || !startTime || !endTime || !priority || !status || !email) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 }
@@ -33,13 +33,14 @@ export const POST = async (req: Request) => {
       );
     }
 
-    // Insert the task into MongoDB
+    // Insert the task into MongoDB, including the email
     const result = await tasksCollection.insertOne({
       title,
       startTime: new Date(startTime),
       endTime: new Date(endTime),
       priority,
       status,
+      email,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

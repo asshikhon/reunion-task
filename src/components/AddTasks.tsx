@@ -1,7 +1,8 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // Helper function to format date into a readable format
 const formatDate = (date: Date) => {
@@ -10,14 +11,37 @@ const formatDate = (date: Date) => {
 };
 
 const AddTasks = () => {
+  const { data: session } = useSession();  // Get session data from next-auth
+
+  // Set the user email state
+  const [userEmail, setUserEmail] = useState<string>("");
+
   const [task, setTask] = useState({
     title: "",
     startTime: formatDate(new Date()),
     endTime: formatDate(new Date()),
     priority: 1,
     status: "pending",
+    email: userEmail,  // Add email to the state
   });
-  const router = useRouter()
+
+  const router = useRouter();
+  console.log(userEmail);
+
+  // Fetch the user email from session or localStorage
+  useEffect(() => {
+    if (session?.user?.email) {
+      setUserEmail(session.user.email);  // Set email from session
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setTask((prevState : any) => ({ ...prevState, email: session?.user?.email }));  // Add email to task state
+    } else {
+      const email = localStorage.getItem("userEmail");  // Fallback to localStorage if session doesn't exist
+      if (email) {
+        setUserEmail(email);
+        setTask((prevState) => ({ ...prevState, email }));
+      }
+    }
+  }, [session]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -30,21 +54,29 @@ const AddTasks = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Sending the task data along with email
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/addTasks/api`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(task),
+      body: JSON.stringify(task),  // Include email in the task object
     });
 
     const data = await response.json();
     if (response.ok) {
-      alert(data.message); // Show success message
-      router.push('/task-list'); // Redirect to tasks page after successful creation
-      setTask({ title: "", startTime: "", endTime: "", priority: 1, status: "pending" }); // Clear form
+      alert(data.message);  // Show success message
+      router.push('/task-list');  // Redirect to task list page after successful creation
+      setTask({
+        title: "",
+        startTime: "",
+        endTime: "",
+        priority: 1,
+        status: "pending",
+        email: "",
+      });  // Clear form after submitting
     } else {
-      alert(data.error); // Show error message
+      alert(data.error);  // Show error message
     }
   };
 
