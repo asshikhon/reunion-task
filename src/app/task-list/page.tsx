@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState } from "react";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 
@@ -57,9 +58,11 @@ const TaskListPage: React.FC = () => {
       <h1 className="text-2xl font-bold mb-6 text-center text-gray-200">Task List</h1>
 
       <div className="flex flex-wrap justify-between mb-4 gap-4">
-        <button className="btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+    <Link href={`/addTasks`}>
+    <button className="btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
           + Add Task
         </button>
+    </Link>
         <button className="btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md">
           Delete Selected
         </button>
