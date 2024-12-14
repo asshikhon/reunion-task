@@ -25,6 +25,7 @@ export const GET = async (request: Request, { params }: { params: { email: strin
   const statusFilter = url.searchParams.get('status') || 'All';  // Default to 'All'
 
   try {
+    // eslint-disable-next-line prefer-const
     let query: { email: string; status?: string } = { email: params.email };
 
     // If status filter is not 'All', add it to the query
